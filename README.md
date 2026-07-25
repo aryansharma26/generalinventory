@@ -1,42 +1,84 @@
 # Slate Inventory
 
-A modern inventory and point-of-sale workspace for a general store. The application includes an operational dashboard, product catalogue, POS cart and checkout, stock control, attendance, and business reports.
+Slate Inventory is organized as two independent applications:
 
-## Included
+```text
+generalInventory/
+├── frontend/             React + Vite + TypeScript
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── api.ts
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── public/
+│   ├── Dockerfile
+│   └── package.json
+├── backend/              Node.js + Express + TypeScript
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.ts
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── repositories/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── validators/
+│   │   ├── app.ts
+│   │   └── server.ts
+│   ├── Dockerfile
+│   └── package.json
+└── docker-compose.yml
+```
 
-- Responsive overview with sales, profit, transactions, low-stock alerts, recent activity, and attendance
-- Product search, filtering, catalogue table, and add-product workflow
-- POS product browser, live cart, quantity controls, totals, and checkout receipt
-- Inventory valuation, reorder status, stock levels, and adjustment entry points
-- Staff attendance and payroll overview
-- Sales, profit, inventory, and expense reports
-- Durable D1-backed products, sales, sale items, staff, and stock-movement schema
-- Cloudflare Worker-compatible deployment through Sites
+The legacy root Vinext files remain only as the adapter for the already-published Sites preview. New development should happen inside `frontend/` and `backend/`.
 
-## Local development
+## Local setup
 
-Requires Node.js 22.13 or newer.
+Requirements: Node.js 22+, npm, and PostgreSQL.
+
+### Backend
 
 ```bash
-npm ci
+cd backend
+cp .env.example .env
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npm run seed
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+The API runs at `http://localhost:4000`. Health check: `GET /api/health`.
 
-## Database and build
+### Frontend
 
 ```bash
-npm run db:generate
-npm run build
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
 ```
 
-Database migrations are stored in `drizzle/` and applied by the hosting platform. Runtime configuration lives in `.openai/hosting.json`.
+The app runs at `http://localhost:3000` and uses `VITE_API_URL` to reach the backend.
 
-## Architecture
+## Docker
 
-- `app/` — UI and REST API routes
-- `db/` — relational schema and database access
-- `drizzle/` — generated migrations
-- `worker/` — Cloudflare Worker entry
-- `public/` — static assets and social preview
+To start PostgreSQL, backend, and frontend together:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:8080`.
+
+## Production builds
+
+```bash
+cd backend && npm run build
+cd ../frontend && npm run build
+```
+
+The backend uses PostgreSQL through Prisma and separates validation, controllers, services, and repositories. The frontend is a standalone SPA and has no backend framework dependency.
